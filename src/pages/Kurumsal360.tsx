@@ -108,6 +108,14 @@ type SavedSurvey = {
   ortSkor: number;
 };
 
+type BuilderQuestion = {
+  id: number;
+  anaKey: AnaKey | "";
+  konu: string;
+  metin: string;
+  defaultWeight: number | "";
+};
+
 /* =========================================================================
    MOCK VERİ
    ========================================================================= */
@@ -234,7 +242,7 @@ const staff: Kisi[] = (() => {
     const pozisyon = pozisyonlar[idx];
     const sefId = baglanti[idx];
     return {
-     id: 100 + i,   
+      id: 100 + i,
       ad: `P${i + 1}`,
       rol: "PERSONEL" as Rol,
       unvan: pozisyon,
@@ -497,21 +505,93 @@ const cycles: Cycle[] = [
 // Atamalar
 const assignments: Assignment[] = [
   // 2024
-  { id: 1, cycleId: 1, surveyTypeId: 3, evaluateeId: 1, evaluatorIds: [11, 15, 100, 101, 102] }, // CBS Müdürü
-  { id: 2, cycleId: 1, surveyTypeId: 2, evaluateeId: 11, evaluatorIds: [1, 100, 101, 102, 103] }, // Tasarım Şefi
-  { id: 3, cycleId: 1, surveyTypeId: 1, evaluateeId: 100, evaluatorIds: [11, 1] }, // Personel
+  {
+    id: 1,
+    cycleId: 1,
+    surveyTypeId: 3,
+    evaluateeId: 1,
+    evaluatorIds: [11, 15, 100, 101, 102],
+  }, // CBS Müdürü
+  {
+    id: 2,
+    cycleId: 1,
+    surveyTypeId: 2,
+    evaluateeId: 11,
+    evaluatorIds: [1, 100, 101, 102, 103],
+  }, // Tasarım Şefi
+  {
+    id: 3,
+    cycleId: 1,
+    surveyTypeId: 1,
+    evaluateeId: 100,
+    evaluatorIds: [11, 1],
+  }, // Personel
   // 2025
-  { id: 4, cycleId: 2, surveyTypeId: 3, evaluateeId: 2, evaluatorIds: [13, 16, 104, 105, 106] }, // İdari Müdür
-  { id: 5, cycleId: 2, surveyTypeId: 2, evaluateeId: 15, evaluatorIds: [1, 100, 101, 107, 108] }, // Harita Şefi
-  { id: 6, cycleId: 2, surveyTypeId: 1, evaluateeId: 105, evaluatorIds: [15, 1] }, // Harita Mühendisi
+  {
+    id: 4,
+    cycleId: 2,
+    surveyTypeId: 3,
+    evaluateeId: 2,
+    evaluatorIds: [13, 16, 104, 105, 106],
+  }, // İdari Müdür
+  {
+    id: 5,
+    cycleId: 2,
+    surveyTypeId: 2,
+    evaluateeId: 15,
+    evaluatorIds: [1, 100, 101, 107, 108],
+  }, // Harita Şefi
+  {
+    id: 6,
+    cycleId: 2,
+    surveyTypeId: 1,
+    evaluateeId: 105,
+    evaluatorIds: [15, 1],
+  }, // Harita Mühendisi
 ];
 
 // Kayıtlı anketler
 const savedSurveys: SavedSurvey[] = [
-  { id: 1, cycleId: 1, surveyTypeId: 1, evaluateeId: 100, evaluatorId: 11, tarih: "2024-03-10", durum: "Tamamlandı", ortSkor: 82 },
-  { id: 2, cycleId: 1, surveyTypeId: 2, evaluateeId: 11, evaluatorId: 1, tarih: "2024-03-11", durum: "Taslak", ortSkor: 79 },
-  { id: 3, cycleId: 2, surveyTypeId: 3, evaluateeId: 2, evaluatorId: 13, tarih: "2025-04-02", durum: "Tamamlandı", ortSkor: 88 },
-  { id: 4, cycleId: 2, surveyTypeId: 1, evaluateeId: 105, evaluatorId: 15, tarih: "2025-04-05", durum: "Taslak", ortSkor: 75 },
+  {
+    id: 1,
+    cycleId: 1,
+    surveyTypeId: 1,
+    evaluateeId: 100,
+    evaluatorId: 11,
+    tarih: "2024-03-10",
+    durum: "Tamamlandı",
+    ortSkor: 82,
+  },
+  {
+    id: 2,
+    cycleId: 1,
+    surveyTypeId: 2,
+    evaluateeId: 11,
+    evaluatorId: 1,
+    tarih: "2024-03-11",
+    durum: "Taslak",
+    ortSkor: 79,
+  },
+  {
+    id: 3,
+    cycleId: 2,
+    surveyTypeId: 3,
+    evaluateeId: 2,
+    evaluatorId: 13,
+    tarih: "2025-04-02",
+    durum: "Tamamlandı",
+    ortSkor: 88,
+  },
+  {
+    id: 4,
+    cycleId: 2,
+    surveyTypeId: 1,
+    evaluateeId: 105,
+    evaluatorId: 15,
+    tarih: "2025-04-05",
+    durum: "Taslak",
+    ortSkor: 75,
+  },
 ];
 
 /* =========================================================================
@@ -527,10 +607,13 @@ function getUser(id: number): Kisi {
 function getQuestionWeight(q: BaseQuestion, kisi?: Kisi): number {
   if (!kisi) return q.defaultWeight;
   if (q.weightByTitle) {
-    if (kisi.unvan && q.weightByTitle[kisi.unvan] != null) return q.weightByTitle[kisi.unvan]!;
-    if (kisi.pozisyon && q.weightByTitle[kisi.pozisyon] != null) return q.weightByTitle[kisi.pozisyon]!;
+    if (kisi.unvan && q.weightByTitle[kisi.unvan] != null)
+      return q.weightByTitle[kisi.unvan]!;
+    if (kisi.pozisyon && q.weightByTitle[kisi.pozisyon] != null)
+      return q.weightByTitle[kisi.pozisyon]!;
   }
-  if (q.weightByRol && q.weightByRol[kisi.rol] != null) return q.weightByRol[kisi.rol]!;
+  if (q.weightByRol && q.weightByRol[kisi.rol] != null)
+    return q.weightByRol[kisi.rol]!;
   return q.defaultWeight;
 }
 
@@ -552,15 +635,20 @@ function TopNav({
   const items = [
     { key: "dashboard", label: "Panel", icon: Shield },
     { key: "assign", label: "Atamalar", icon: Users },
+    { key: "builder", label: "Anket Oluştur", icon: Filter },
     { key: "survey", label: "Anket", icon: ClipboardList },
     { key: "saved", label: "Kayıtlı Anketler", icon: History },
     { key: "reports", label: "Raporlar", icon: BarChart3 },
   ];
+
   return (
     <div className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-zinc-200">
       <div className="w-full px-8 h-16 flex items-center gap-6">
         <div className="flex items-center gap-2 font-semibold text-[15px]">
-          <div className="p-1.5 rounded-lg" style={{ background: theme.brand.primary }}>
+          <div
+            className="p-1.5 rounded-lg"
+            style={{ background: theme.brand.primary }}
+          >
             <Building2 size={18} color="white" />
           </div>
           Kurumsal 360° Değerlendirme
@@ -599,7 +687,10 @@ function TopNav({
 
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ background: theme.brand.bg }} className="min-h-[calc(100vh-4rem)] w-full">
+    <div
+      style={{ background: theme.brand.bg }}
+      className="min-h-[calc(100vh-4rem)] w-full"
+    >
       <div className="px-8 py-6 space-y-6">{children}</div>
     </div>
   );
@@ -608,7 +699,9 @@ function PageShell({ children }: { children: React.ReactNode }) {
 function Field({ label, value }: { label: string; value: string | number }) {
   return (
     <div>
-      <div className="text-[11px] uppercase tracking-wide text-zinc-500">{label}</div>
+      <div className="text-[11px] uppercase tracking-wide text-zinc-500">
+        {label}
+      </div>
       <div className="text-sm font-medium">{value}</div>
     </div>
   );
@@ -635,8 +728,17 @@ function Dashboard() {
       {/* KPI satırı */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <KpiCard icon={Users} title="Toplam Çalışan" value={toplam} />
-        <KpiCard icon={ClipboardList} title="Aktif Anket Tipi" value={aktifAnket} />
-        <KpiCard icon={Star} title="Genel Ortalama" value="82.4" sub="0–100 ölçeği" />
+        <KpiCard
+          icon={ClipboardList}
+          title="Aktif Anket Tipi"
+          value={aktifAnket}
+        />
+        <KpiCard
+          icon={Star}
+          title="Genel Ortalama"
+          value="82.4"
+          sub="0–100 ölçeği"
+        />
         <KpiCard
           icon={CalendarClock}
           title="Tamamlama / Gecikme"
@@ -676,12 +778,16 @@ function Dashboard() {
             <div className="text-sm font-semibold">Yeterlilik Rehberi</div>
           </div>
           <p className="text-xs text-zinc-500">
-            Aşağıdaki ana başlıklar, 360° anketlerinde kullanılan temel yeterlilik alanlarını tanımlar. Yöneticilerin
-            puanlama yaparken aynı dili kullanmasını sağlar.
+            Aşağıdaki ana başlıklar, 360° anketlerinde kullanılan temel
+            yeterlilik alanlarını tanımlar. Yöneticilerin puanlama yaparken aynı
+            dili kullanmasını sağlar.
           </p>
           <div className="grid sm:grid-cols-3 gap-3 mt-2">
             {competencyGuide.map((c, i) => (
-              <div key={c.key} className="rounded-xl border bg-zinc-50 p-3 space-y-1">
+              <div
+                key={c.key}
+                className="rounded-xl border bg-zinc-50 p-3 space-y-1"
+              >
                 <div className="text-xs font-semibold flex items-center gap-1">
                   <span
                     className="inline-block h-2 w-2 rounded-full"
@@ -788,9 +894,14 @@ function AssignmentsPage() {
             </select>
           </div>
           <div>
-            <label className="text-xs text-zinc-600">Değerlendirilen Kişi</label>
+            <label className="text-xs text-zinc-600">
+              Değerlendirilen Kişi
+            </label>
             <div className="relative mt-1">
-              <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500" />
+              <Search
+                size={14}
+                className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500"
+              />
               <input
                 className="pl-7 pr-3 py-2 w-full border rounded-lg text-sm"
                 placeholder="İsim ara…"
@@ -816,7 +927,10 @@ function AssignmentsPage() {
           const open = openId === a.id;
 
           return (
-            <div key={a.id} className="rounded-2xl bg-white border border-zinc-200 shadow-sm">
+            <div
+              key={a.id}
+              className="rounded-2xl bg-white border border-zinc-200 shadow-sm"
+            >
               <button
                 onClick={() => setOpenId((s) => (s === a.id ? null : a.id))}
                 className="w-full px-5 py-3 flex items-center gap-3"
@@ -833,14 +947,18 @@ function AssignmentsPage() {
                 <div className="text-xs text-zinc-500">
                   {evaluators.length} değerlendirici
                 </div>
-                <div className="text-zinc-500">{open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</div>
+                <div className="text-zinc-500">
+                  {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                </div>
               </button>
 
               {open && (
                 <div className="px-5 pb-5 space-y-3">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <div className="text-xs text-zinc-500 mb-1">Değerlendiriciler</div>
+                      <div className="text-xs text-zinc-500 mb-1">
+                        Değerlendiriciler
+                      </div>
                       <div className="flex flex-wrap gap-2">
                         {evaluators.map((u) => (
                           <span
@@ -853,8 +971,9 @@ function AssignmentsPage() {
                       </div>
                     </div>
                     <div className="text-xs text-zinc-500">
-                      Bu değerlendirmede soru ağırlıkları, {evaluatee.unvan} / {evaluatee.rol} için tanımlanan
-                      kurallara göre otomatik hesaplanır.
+                      Bu değerlendirmede soru ağırlıkları, {evaluatee.unvan} /{" "}
+                      {evaluatee.rol} için tanımlanan kurallara göre otomatik
+                      hesaplanır.
                     </div>
                   </div>
 
@@ -886,7 +1005,6 @@ function AssignmentsPage() {
                 </div>
               )}
             </div>
-            
           );
         })}
 
@@ -909,11 +1027,15 @@ function SurveyPage() {
   const surveyType = surveyTypes.find((s) => s.id === surveyTypeId)!;
 
   const hedefKisiler = allUsers.filter((u) => u.rol === surveyType.hedefRol);
-  const [evaluateeId, setEvaluateeId] = useState<number>(hedefKisiler[0]?.id ?? allUsers[0].id);
+  const [evaluateeId, setEvaluateeId] = useState<number>(
+    hedefKisiler[0]?.id ?? allUsers[0].id
+  );
   const evaluatee = getUser(evaluateeId);
 
   const evaluatorCandidates = allUsers.filter((u) => u.id !== evaluateeId);
-  const [evaluatorId, setEvaluatorId] = useState<number>(evaluatorCandidates[0]?.id ?? allUsers[0].id);
+  const [evaluatorId, setEvaluatorId] = useState<number>(
+    evaluatorCandidates[0]?.id ?? allUsers[0].id
+  );
 
   const [puan, setPuan] = useState<Record<number, number>>({});
   const [yorum, setYorum] = useState<Record<number, string>>({});
@@ -997,8 +1119,9 @@ function SurveyPage() {
 
           <div className="text-[11px] text-zinc-500">
             <div className="font-semibold mb-1">Kullanım Amacı</div>
-            Kağıt ortamda yapılmış bir değerlendirmeyi, ilgili kişiyi ve anket tipini seçip dijital olarak sisteme
-            aktarmak için bu ekran kullanılır.
+            Kağıt ortamda yapılmış bir değerlendirmeyi, ilgili kişiyi ve anket
+            tipini seçip dijital olarak sisteme aktarmak için bu ekran
+            kullanılır.
           </div>
         </div>
       </div>
@@ -1015,7 +1138,11 @@ function SurveyPage() {
           <div className="text-xs text-zinc-500">
             Rol çarpanı:{" "}
             {(
-              rolCarpani[`${getUser(evaluatorId).rol}-${evaluatee.rol}` as `${Rol}-${Rol}`] ?? 1
+              rolCarpani[
+                `${getUser(evaluatorId).rol}-${
+                  evaluatee.rol
+                }` as `${Rol}-${Rol}`
+              ] ?? 1
             ).toFixed(2)}
           </div>
         </div>
@@ -1067,7 +1194,10 @@ function SurveyPage() {
         </div>
 
         <div className="flex justify-end gap-2 mt-4">
-          <button onClick={saveDraft} className="px-3 py-2 rounded-lg border bg-white text-sm">
+          <button
+            onClick={saveDraft}
+            className="px-3 py-2 rounded-lg border bg-white text-sm"
+          >
             Taslak Kaydet
           </button>
           <button
@@ -1084,13 +1214,314 @@ function SurveyPage() {
 }
 
 /* =========================================================================
+   ANKET OLUŞTUR – BASİT ŞABLON
+   ========================================================================= */
+
+function SurveyBuilderPage() {
+  const [ad, setAd] = useState("");
+  const [surveyTypeId, setSurveyTypeId] = useState<number | "">("");
+  const [hedefRol, setHedefRol] = useState<Rol | "">("");
+
+  const [questions, setQuestions] = useState<BuilderQuestion[]>([
+    { id: 1, anaKey: "", konu: "", metin: "", defaultWeight: "" },
+  ]);
+
+  const addRow = () => {
+    setQuestions((prev) => [
+      ...prev,
+      { id: Date.now(), anaKey: "", konu: "", metin: "", defaultWeight: "" },
+    ]);
+  };
+
+  const removeRow = (id: number) => {
+    setQuestions((prev) =>
+      prev.length === 1 ? prev : prev.filter((q) => q.id !== id)
+    );
+  };
+
+  const updateQuestion = <K extends keyof BuilderQuestion>(
+    id: number,
+    key: K,
+    value: BuilderQuestion[K]
+  ) => {
+    setQuestions((prev) =>
+      prev.map((q) => (q.id === id ? { ...q, [key]: value } : q))
+    );
+  };
+
+  const toplamAgirlik = useMemo(
+    () =>
+      questions.reduce(
+        (acc, q) =>
+          acc + (typeof q.defaultWeight === "number" ? q.defaultWeight : 0),
+        0
+      ),
+    [questions]
+  );
+
+  const soruSayisi = questions.filter(
+    (q) => q.anaKey && q.konu && q.metin && q.defaultWeight !== ""
+  ).length;
+
+  const handleCreate = () => {
+    if (!ad || !surveyTypeId || !hedefRol) {
+      alert("Anket adı, anket tipi ve hedef rol zorunludur.");
+      return;
+    }
+
+    const doluSorular = questions.filter(
+      (q) => q.anaKey && q.konu && q.metin && q.defaultWeight !== ""
+    );
+
+    if (doluSorular.length === 0) {
+      alert("En az bir soru tanımlamalısınız.");
+      return;
+    }
+
+    const payload = {
+      ad,
+      surveyTypeId,
+      hedefRol,
+      sorular: doluSorular.map((q) => ({
+        anaKey: q.anaKey,
+        konu: q.konu,
+        metin: q.metin,
+        defaultWeight: Number(q.defaultWeight),
+      })),
+    };
+
+    console.log("Yeni anket şablonu (mock payload):", payload);
+    alert("Anket şablonu oluşturuldu (mock). Konsolda JSON görebilirsin.");
+  };
+
+  return (
+    <PageShell>
+      <div className="grid xl:grid-cols-3 gap-4">
+        {/* Sol: Form + sorular */}
+        <div className="xl:col-span-2 space-y-4">
+          {/* Üst form */}
+          <div className="rounded-2xl bg-white border border-zinc-200 p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Filter size={18} />
+                <div className="text-sm font-semibold">Anket Oluştur</div>
+              </div>
+              <div className="text-xs text-zinc-500">
+                Anketin temel bilgilerini girin, ardından soru listesini
+                doldurun.
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs text-zinc-600">Anket Adı</label>
+                <input
+                  className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                  placeholder="Örn: 2025 Personel 360°"
+                  value={ad}
+                  onChange={(e) => setAd(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-zinc-600">Anket Tipi</label>
+                <select
+                  className="mt-1 w-full border rounded-lg px-3 py-2 bg-white text-sm"
+                  value={surveyTypeId}
+                  onChange={(e) =>
+                    setSurveyTypeId(
+                      e.target.value === "" ? "" : Number(e.target.value)
+                    )
+                  }
+                >
+                  <option value="">Seçiniz</option>
+                  {surveyTypes.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.ad}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-zinc-600">Hedef Rol</label>
+                <select
+                  className="mt-1 w-full border rounded-lg px-3 py-2 bg-white text-sm"
+                  value={hedefRol}
+                  onChange={(e) => setHedefRol(e.target.value as Rol | "")}
+                >
+                  <option value="">Seçiniz</option>
+                  <option value="PERSONEL">Personel</option>
+                  <option value="ŞEF">Şef</option>
+                  <option value="MÜDÜR">Müdür</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Soru listesi */}
+          <div className="rounded-2xl bg-white border border-zinc-200 p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm font-semibold">Anket Soruları</div>
+              <button
+                type="button"
+                onClick={addRow}
+                className="px-3 py-1.5 rounded-lg border bg-white text-xs"
+              >
+                + Soru Satırı Ekle
+              </button>
+            </div>
+
+            <div className="overflow-auto rounded-xl border">
+              <table className="min-w-[900px] w-full text-sm">
+                <thead className="bg-zinc-50 text-xs">
+                  <tr>
+                    <th className="p-2 text-left w-40">Ana Başlık</th>
+                    <th className="p-2 text-left w-48">Konu</th>
+                    <th className="p-2 text-left">Soru</th>
+                    <th className="p-2 text-left w-32">Vars. Ağırlık</th>
+                    <th className="p-2 text-left w-16"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {questions.map((q) => (
+                    <tr key={q.id} className="border-t">
+                      <td className="p-2">
+                        <select
+                          className="w-full border rounded px-2 py-1 text-xs bg-white"
+                          value={q.anaKey}
+                          onChange={(e) =>
+                            updateQuestion(
+                              q.id,
+                              "anaKey",
+                              e.target.value as AnaKey | ""
+                            )
+                          }
+                        >
+                          <option value="">Seçiniz</option>
+                          <option value="MESLEKI">Mesleki Yeterlilik</option>
+                          <option value="DAVRANISSAL">
+                            Davranışsal Yeterlilik
+                          </option>
+                          <option value="BIREYSEL">Bireysel Yeterlilik</option>
+                        </select>
+                      </td>
+                      <td className="p-2">
+                        <input
+                          className="w-full border rounded px-2 py-1 text-xs"
+                          placeholder="Konu"
+                          value={q.konu}
+                          onChange={(e) =>
+                            updateQuestion(q.id, "konu", e.target.value)
+                          }
+                        />
+                      </td>
+                      <td className="p-2">
+                        <input
+                          className="w-full border rounded px-2 py-1 text-xs"
+                          placeholder="Soru metni"
+                          value={q.metin}
+                          onChange={(e) =>
+                            updateQuestion(q.id, "metin", e.target.value)
+                          }
+                        />
+                      </td>
+                      <td className="p-2">
+                        <input
+                          type="number"
+                          min={0}
+                          step={0.1}
+                          className="w-full border rounded px-2 py-1 text-xs"
+                          placeholder="0.0"
+                          value={q.defaultWeight === "" ? "" : q.defaultWeight}
+                          onChange={(e) =>
+                            updateQuestion(
+                              q.id,
+                              "defaultWeight",
+                              e.target.value === ""
+                                ? ""
+                                : Number(e.target.value)
+                            )
+                          }
+                        />
+                      </td>
+                      <td className="p-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => removeRow(q.id)}
+                          className="text-xs text-red-500"
+                        >
+                          Sil
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {questions.length === 0 && (
+                    <tr>
+                      <td className="p-3 text-xs text-zinc-500" colSpan={5}>
+                        Henüz soru satırı yok. “Soru Satırı Ekle” butonunu
+                        kullanın.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={handleCreate}
+                className="px-4 py-2 rounded-lg text-sm text-white"
+                style={{ background: theme.brand.primary }}
+              >
+                Anketi Oluştur
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Sağ: Özet */}
+        <div className="rounded-2xl bg-white border border-zinc-200 p-4 shadow-sm space-y-4">
+          <div className="text-sm font-semibold">Anket Özeti</div>
+          <div className="grid gap-3 text-sm">
+            <Field label="Anket Adı" value={ad || "-"} />
+            <Field
+              label="Anket Tipi"
+              value={
+                surveyTypeId
+                  ? surveyTypes.find((s) => s.id === surveyTypeId)?.ad ?? "-"
+                  : "-"
+              }
+            />
+            <Field label="Hedef Rol" value={hedefRol || "-"} />
+            <Field label="Tanımlanan Soru Sayısı" value={soruSayisi} />
+            <Field
+              label="Toplam Varsayılan Ağırlık"
+              value={toplamAgirlik.toFixed(2)}
+            />
+          </div>
+          <div className="text-[11px] text-zinc-500">
+            <p>
+              Bu özet, oluşturduğunuz anket şablonunun temel parametrelerini
+              gösterir. Gerçek sistemde bu veriler, API ile sunucuya
+              kaydedilecektir.
+            </p>
+          </div>
+        </div>
+      </div>
+    </PageShell>
+  );
+}
+
+/* =========================================================================
    KAYITLI ANKETLER
    ========================================================================= */
 
 function SavedSurveysPage() {
   const [cycleId, setCycleId] = useState<number | "all">("all");
   const [durum, setDurum] = useState<"all" | "Taslak" | "Tamamlandı">("all");
-  const [selectedId, setSelectedId] = useState<number | null>(savedSurveys[0]?.id ?? null);
+  const [selectedId, setSelectedId] = useState<number | null>(
+    savedSurveys[0]?.id ?? null
+  );
 
   const filtered = useMemo(
     () =>
@@ -1102,7 +1533,10 @@ function SavedSurveysPage() {
     [cycleId, durum]
   );
 
-  const selected = selectedId != null ? savedSurveys.find((s) => s.id === selectedId) ?? null : null;
+  const selected =
+    selectedId != null
+      ? savedSurveys.find((s) => s.id === selectedId) ?? null
+      : null;
 
   return (
     <PageShell>
@@ -1126,7 +1560,9 @@ function SavedSurveysPage() {
                 className="mt-1 w-full border rounded-lg px-3 py-2 bg-white text-sm"
                 value={cycleId}
                 onChange={(e) =>
-                  setCycleId(e.target.value === "all" ? "all" : Number(e.target.value))
+                  setCycleId(
+                    e.target.value === "all" ? "all" : Number(e.target.value)
+                  )
                 }
               >
                 <option value="all">Tümü</option>
@@ -1227,24 +1663,36 @@ function SavedSurveysPage() {
             <>
               {(() => {
                 const cyc = cycles.find((c) => c.id === selected.cycleId)!;
-                const st = surveyTypes.find((t) => t.id === selected.surveyTypeId)!;
+                const st = surveyTypes.find(
+                  (t) => t.id === selected.surveyTypeId
+                )!;
                 const evale = getUser(selected.evaluateeId);
                 const evalr = getUser(selected.evaluatorId);
                 return (
                   <>
                     <div className="grid gap-3 text-sm mb-3">
-                      <Field label="Değerlendirilen" value={`${evale.ad} • ${evale.unvan}`} />
-                      <Field label="Değerlendirici" value={`${evalr.ad} • ${evalr.rol}`} />
+                      <Field
+                        label="Değerlendirilen"
+                        value={`${evale.ad} • ${evale.unvan}`}
+                      />
+                      <Field
+                        label="Değerlendirici"
+                        value={`${evalr.ad} • ${evalr.rol}`}
+                      />
                       <Field label="Dönem" value={cyc.ad} />
                       <Field label="Anket" value={st.ad} />
                       <Field label="Tarih" value={selected.tarih} />
                       <Field label="Durum" value={selected.durum} />
-                      <Field label="Ortalama Skor" value={`${selected.ortSkor} / 100`} />
+                      <Field
+                        label="Ortalama Skor"
+                        value={`${selected.ortSkor} / 100`}
+                      />
                     </div>
                     <div className="text-[11px] text-zinc-500 mb-3">
                       <p>
-                        <b>Düzenleme:</b> Gerçek uygulamada bu alandan ilgili anket tekrar açılıp puanlar güncellenir.
-                        Şu an arayüz mock amaçlıdır.
+                        <b>Düzenleme:</b> Gerçek uygulamada bu alandan ilgili
+                        anket tekrar açılıp puanlar güncellenir. Şu an arayüz
+                        mock amaçlıdır.
                       </p>
                     </div>
                     <button
@@ -1261,7 +1709,8 @@ function SavedSurveysPage() {
 
           {!selected && (
             <div className="text-xs text-zinc-500">
-              Soldan bir kayıt seçerek detayları görüntüleyebilir ve düzenlemek üzere açabilirsiniz.
+              Soldan bir kayıt seçerek detayları görüntüleyebilir ve düzenlemek
+              üzere açabilirsiniz.
             </div>
           )}
         </div>
@@ -1280,7 +1729,9 @@ function ReportsPage() {
     () => allUsers.filter((u) => u.ad.toLowerCase().includes(q.toLowerCase())),
     [q]
   );
-  const [seciliId, setSeciliId] = useState<number>(people[0]?.id ?? allUsers[0].id);
+  const [seciliId, setSeciliId] = useState<number>(
+    people[0]?.id ?? allUsers[0].id
+  );
   const kisi = getUser(seciliId);
 
   const topicData = useMemo(() => {
@@ -1293,7 +1744,12 @@ function ReportsPage() {
   }, [seciliId]);
 
   const overall = useMemo(
-    () => Number((topicData.reduce((a, c) => a + c.skor, 0) / topicData.length).toFixed(1)),
+    () =>
+      Number(
+        (topicData.reduce((a, c) => a + c.skor, 0) / topicData.length).toFixed(
+          1
+        )
+      ),
     [topicData]
   );
 
@@ -1309,7 +1765,10 @@ function ReportsPage() {
         <div className="rounded-2xl bg-white border border-zinc-200 p-4 shadow-sm">
           <div className="text-sm font-semibold mb-2">Çalışanlar</div>
           <div className="relative mb-3">
-            <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <Search
+              size={14}
+              className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500"
+            />
             <input
               className="pl-7 pr-3 py-2 w-full border rounded-lg text-sm"
               placeholder="İsim filtrele…"
@@ -1342,7 +1801,10 @@ function ReportsPage() {
             </div>
             <div className="grid md:grid-cols-3 gap-3 w-full text-sm">
               <Field label="Ad Soyad" value={kisi.ad} />
-              <Field label="Rol / Ünvan" value={`${kisi.rol} • ${kisi.unvan}`} />
+              <Field
+                label="Rol / Ünvan"
+                value={`${kisi.rol} • ${kisi.unvan}`}
+              />
               <Field label="Departman" value={kisi.departman} />
               <Field label="Sicil" value={kisi.sicil} />
               <Field label="E-posta" value={kisi.email} />
@@ -1355,17 +1817,26 @@ function ReportsPage() {
 
           <div className="grid xl:grid-cols-3 gap-4">
             <div className="xl:col-span-2">
-              <div className="text-sm font-semibold mb-2">Ana Başlık Skorları</div>
+              <div className="text-sm font-semibold mb-2">
+                Ana Başlık Skorları
+              </div>
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={topicData} layout="vertical" margin={{ left: 40 }}>
+                  <BarChart
+                    data={topicData}
+                    layout="vertical"
+                    margin={{ left: 40 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis type="number" domain={[0, 100]} />
                     <YAxis type="category" dataKey="anaBaslik" />
                     <Tooltip />
                     <Bar dataKey="skor" radius={[6, 6, 6, 6]}>
                       {topicData.map((_, idx) => (
-                        <Cell key={idx} fill={theme.chart[idx % theme.chart.length]} />
+                        <Cell
+                          key={idx}
+                          fill={theme.chart[idx % theme.chart.length]}
+                        />
                       ))}
                     </Bar>
                   </BarChart>
@@ -1425,10 +1896,16 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
   };
 
   return (
-    <div className="min-h-screen grid place-items-center" style={{ background: theme.brand.bg }}>
+    <div
+      className="min-h-screen grid place-items-center"
+      style={{ background: theme.brand.bg }}
+    >
       <div className="w-full max-w-md rounded-2xl bg-white border border-zinc-200 p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 rounded-lg" style={{ background: theme.brand.primary }}>
+          <div
+            className="p-2 rounded-lg"
+            style={{ background: theme.brand.primary }}
+          >
             <Building2 size={18} color="white" />
           </div>
           <div className="text-lg font-semibold">Kurumsal 360° Giriş</div>
@@ -1476,15 +1953,19 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
    ========================================================================= */
 
 export default function Kurumsal360() {
-  const [page, setPage] = useState<"dashboard" | "assign" | "survey" | "saved" | "reports">(
-    "dashboard"
-  );
+  const [page, setPage] = useState<
+    "dashboard" | "assign" | "builder" | "survey" | "saved" | "reports"
+  >("dashboard");
+
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true); // demo için true
 
   if (!isLoggedIn) return <Login onSuccess={() => setIsLoggedIn(true)} />;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ color: theme.brand.text }}>
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ color: theme.brand.text }}
+    >
       <TopNav
         current={page}
         setCurrent={(k) => setPage(k as any)}
@@ -1494,13 +1975,14 @@ export default function Kurumsal360() {
 
       {page === "dashboard" && <Dashboard />}
       {page === "assign" && <AssignmentsPage />}
+      {page === "builder" && <SurveyBuilderPage />}
       {page === "survey" && <SurveyPage />}
       {page === "saved" && <SavedSurveysPage />}
       {page === "reports" && <ReportsPage />}
 
       <footer className="border-t border-zinc-200 bg-white/60">
         <div className="px-8 py-3 text-xs text-zinc-500 flex items-center justify-between">
-          <span>© 2025 Kurum A.Ş.</span>
+          <span>© 2025 IMAR A.Ş.</span>
           <span>Gizlilik • Kullanım Koşulları</span>
         </div>
       </footer>
