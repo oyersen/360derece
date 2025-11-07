@@ -1,3 +1,4 @@
+// src/pages/Kurumsal360.tsx
 import { useMemo, useState } from "react";
 import {
   BarChart,
@@ -233,7 +234,7 @@ const staff: Kisi[] = (() => {
     const pozisyon = pozisyonlar[idx];
     const sefId = baglanti[idx];
     return {
-      id: 100 + i, // 100, 101, ... 123
+     id: 100 + i,   
       ad: `P${i + 1}`,
       rol: "PERSONEL" as Rol,
       unvan: pozisyon,
@@ -507,46 +508,10 @@ const assignments: Assignment[] = [
 
 // Kayıtlı anketler
 const savedSurveys: SavedSurvey[] = [
-  {
-    id: 1,
-    cycleId: 1,
-    surveyTypeId: 1,
-    evaluateeId: 100,
-    evaluatorId: 11,
-    tarih: "2024-03-10",
-    durum: "Tamamlandı",
-    ortSkor: 82,
-  },
-  {
-    id: 2,
-    cycleId: 1,
-    surveyTypeId: 2,
-    evaluateeId: 11,
-    evaluatorId: 1,
-    tarih: "2024-03-11",
-    durum: "Taslak",
-    ortSkor: 79,
-  },
-  {
-    id: 3,
-    cycleId: 2,
-    surveyTypeId: 3,
-    evaluateeId: 2,
-    evaluatorId: 13,
-    tarih: "2025-04-02",
-    durum: "Tamamlandı",
-    ortSkor: 88,
-  },
-  {
-    id: 4,
-    cycleId: 2,
-    surveyTypeId: 1,
-    evaluateeId: 105,
-    evaluatorId: 15,
-    tarih: "2025-04-05",
-    durum: "Taslak",
-    ortSkor: 75,
-  },
+  { id: 1, cycleId: 1, surveyTypeId: 1, evaluateeId: 100, evaluatorId: 11, tarih: "2024-03-10", durum: "Tamamlandı", ortSkor: 82 },
+  { id: 2, cycleId: 1, surveyTypeId: 2, evaluateeId: 11, evaluatorId: 1, tarih: "2024-03-11", durum: "Taslak", ortSkor: 79 },
+  { id: 3, cycleId: 2, surveyTypeId: 3, evaluateeId: 2, evaluatorId: 13, tarih: "2025-04-02", durum: "Tamamlandı", ortSkor: 88 },
+  { id: 4, cycleId: 2, surveyTypeId: 1, evaluateeId: 105, evaluatorId: 15, tarih: "2025-04-05", durum: "Taslak", ortSkor: 75 },
 ];
 
 /* =========================================================================
@@ -563,8 +528,7 @@ function getQuestionWeight(q: BaseQuestion, kisi?: Kisi): number {
   if (!kisi) return q.defaultWeight;
   if (q.weightByTitle) {
     if (kisi.unvan && q.weightByTitle[kisi.unvan] != null) return q.weightByTitle[kisi.unvan]!;
-    if (kisi.pozisyon && q.weightByTitle[kisi.pozisyon] != null)
-      return q.weightByTitle[kisi.pozisyon]!;
+    if (kisi.pozisyon && q.weightByTitle[kisi.pozisyon] != null) return q.weightByTitle[kisi.pozisyon]!;
   }
   if (q.weightByRol && q.weightByRol[kisi.rol] != null) return q.weightByRol[kisi.rol]!;
   return q.defaultWeight;
@@ -588,8 +552,7 @@ function TopNav({
   const items = [
     { key: "dashboard", label: "Panel", icon: Shield },
     { key: "assign", label: "Atamalar", icon: Users },
-    { key: "builder", label: "Anket Oluştur", icon: Filter },
-    { key: "survey", label: "Anket Girişi", icon: ClipboardList },
+    { key: "survey", label: "Anket", icon: ClipboardList },
     { key: "saved", label: "Kayıtlı Anketler", icon: History },
     { key: "reports", label: "Raporlar", icon: BarChart3 },
   ];
@@ -867,10 +830,10 @@ function AssignmentsPage() {
                 <div className="text-xs px-2 py-1 rounded-full bg-zinc-100 border">
                   {cycle.ad} • {surveyType.ad}
                 </div>
-                <div className="text-xs text-zinc-500">{evaluators.length} değerlendirici</div>
-                <div className="text-zinc-500">
-                  {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                <div className="text-xs text-zinc-500">
+                  {evaluators.length} değerlendirici
                 </div>
+                <div className="text-zinc-500">{open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</div>
               </button>
 
               {open && (
@@ -912,7 +875,9 @@ function AssignmentsPage() {
                             <td className="p-2">{q.ana}</td>
                             <td className="p-2">{q.konu}</td>
                             <td className="p-2">{q.metin}</td>
-                            <td className="p-2">{getQuestionWeight(q, evaluatee).toFixed(2)}</td>
+                            <td className="p-2">
+                              {getQuestionWeight(q, evaluatee).toFixed(2)}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -921,6 +886,7 @@ function AssignmentsPage() {
                 </div>
               )}
             </div>
+            
           );
         })}
 
@@ -929,251 +895,6 @@ function AssignmentsPage() {
             Seçilen dönem ve anket tipine ait atama bulunamadı.
           </div>
         )}
-      </div>
-    </PageShell>
-  );
-}
-
-/* =========================================================================
-   ANKET OLUŞTUR – ŞABLON TASARIMI
-   ========================================================================= */
-
-function SurveyBuilderPage() {
-  const [ad, setAd] = useState("");
-  const [hedefRol, setHedefRol] = useState<Rol | "">("");
-  const [aktifAnaKey, setAktifAnaKey] = useState<AnaKey | "ALL">("ALL");
-  const [search, setSearch] = useState("");
-  const [selectedIds, setSelectedIds] = useState<number[]>(() => baseQuestions.map((q) => q.id));
-
-  const filteredQuestions = useMemo(
-    () =>
-      baseQuestions.filter((q) => {
-        if (aktifAnaKey !== "ALL" && q.anaKey !== aktifAnaKey) return false;
-        if (!search) return true;
-        const s = search.toLowerCase();
-        return (
-          q.ana.toLowerCase().includes(s) ||
-          q.konu.toLowerCase().includes(s) ||
-          q.metin.toLowerCase().includes(s)
-        );
-      }),
-    [aktifAnaKey, search]
-  );
-
-  const toggleQuestion = (id: number) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
-
-  const anaKeySummary = useMemo(() => {
-    const summary: Record<AnaKey, number> = {
-      MESLEKI: 0,
-      DAVRANISSAL: 0,
-      BIREYSEL: 0,
-    };
-    baseQuestions.forEach((q) => {
-      if (selectedIds.includes(q.id)) summary[q.anaKey] += 1;
-    });
-    return summary;
-  }, [selectedIds]);
-
-  const toplamAgirlik = useMemo(() => {
-    return baseQuestions
-      .filter((q) => selectedIds.includes(q.id))
-      .reduce((acc, q) => acc + q.defaultWeight, 0);
-  }, [selectedIds]);
-
-  const handleCreate = () => {
-    if (!ad || !hedefRol) {
-      alert("Anket adı ve hedef rol zorunludur.");
-      return;
-    }
-    const payload = {
-      ad,
-      hedefRol,
-      soruIdleri: selectedIds,
-    };
-    console.log("Yeni anket şablonu (mock payload):", payload);
-    alert("Anket şablonu oluşturuldu (mock). Konsolda JSON görebilirsin.");
-  };
-
-  return (
-    <PageShell>
-      <div className="rounded-2xl bg-white border border-zinc-200 p-5 shadow-sm mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Filter size={18} />
-            <div className="text-sm font-semibold">Anket Şablonu Oluştur</div>
-          </div>
-          <div className="text-xs text-zinc-500">
-            Farklı dönem ve gruplar için Mesleki / Davranışsal / Bireysel soruları kombinleyerek şablon tasarlayın.
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 grid sm:grid-cols-3 gap-3">
-            <div>
-              <label className="text-xs text-zinc-600">Anket Adı</label>
-              <input
-                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
-                placeholder="Örn: 2025 Şef 360° – Teknik"
-                value={ad}
-                onChange={(e) => setAd(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="text-xs text-zinc-600">Hedef Rol</label>
-              <select
-                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm bg-white"
-                value={hedefRol}
-                onChange={(e) => setHedefRol(e.target.value as Rol | "")}
-              >
-                <option value="">Seçiniz</option>
-                <option value="PERSONEL">Personel</option>
-                <option value="ŞEF">Şef</option>
-                <option value="MÜDÜR">Müdür</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-zinc-600">Ana Başlık Filtresi</label>
-              <div className="flex flex-wrap gap-1 mt-1">
-                <button
-                  onClick={() => setAktifAnaKey("ALL")}
-                  className={`px-2 py-1 rounded-full text-[11px] border ${
-                    aktifAnaKey === "ALL"
-                      ? "bg-zinc-900 text-white border-zinc-900"
-                      : "bg-white hover:bg-zinc-50"
-                  }`}
-                >
-                  Tümü
-                </button>
-                {competencyGuide.map((c) => (
-                  <button
-                    key={c.key}
-                    onClick={() => setAktifAnaKey(c.key)}
-                    className={`px-2 py-1 rounded-full text-[11px] border ${
-                      aktifAnaKey === c.key
-                        ? "bg-zinc-900 text-white border-zinc-900"
-                        : "bg-white hover:bg-zinc-50"
-                    }`}
-                  >
-                    {c.title.split(" ")[0]}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs text-zinc-600">Soru Ara</label>
-            <div className="relative mt-1">
-              <Search
-                size={14}
-                className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500"
-              />
-              <input
-                className="pl-7 pr-3 py-2 w-full border rounded-lg text-sm"
-                placeholder="Başlık, konu veya soru metni"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid xl:grid-cols-3 gap-4">
-        {/* Sol: soru listesi */}
-        <div className="xl:col-span-2 rounded-2xl bg-white border border-zinc-200 p-4 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-semibold">Soru Havuzu (20)</div>
-            <div className="text-xs text-zinc-500">
-              Seçilen soru sayısı:{" "}
-              <span className="font-semibold">{selectedIds.length}</span>
-            </div>
-          </div>
-
-          <div className="overflow-auto rounded-xl border">
-            <table className="min-w-[950px] w-full text-sm">
-              <thead className="bg-zinc-50 text-xs">
-                <tr>
-                  <th className="p-2 text-left">Seç</th>
-                  <th className="p-2 text-left">Ana Başlık</th>
-                  <th className="p-2 text-left">Konu</th>
-                  <th className="p-2 text-left">Soru</th>
-                  <th className="p-2 text-left">Varsayılan Ağırlık</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredQuestions.map((q) => {
-                  const checked = selectedIds.includes(q.id);
-                  return (
-                    <tr key={q.id} className="border-t">
-                      <td className="p-2">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleQuestion(q.id)}
-                        />
-                      </td>
-                      <td className="p-2 text-xs">{q.ana}</td>
-                      <td className="p-2 text-xs">{q.konu}</td>
-                      <td className="p-2 text-xs">{q.metin}</td>
-                      <td className="p-2 text-xs">{q.defaultWeight.toFixed(2)}</td>
-                    </tr>
-                  );
-                })}
-
-                {filteredQuestions.length === 0 && (
-                  <tr>
-                    <td className="p-3 text-xs text-zinc-500" colSpan={5}>
-                      Filtrelere uyan soru bulunamadı.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Sağ: özet */}
-        <div className="rounded-2xl bg-white border border-zinc-200 p-4 shadow-sm space-y-4">
-          <div className="text-sm font-semibold">Anket Özeti</div>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <Field label="Seçilen Soru Sayısı" value={selectedIds.length} />
-            <Field label="Toplam Varsayılan Ağırlık" value={toplamAgirlik.toFixed(2)} />
-          </div>
-
-          <div className="text-xs text-zinc-500 mt-2">Ana Başlık Dağılımı</div>
-          <div className="grid grid-cols-3 gap-2 text-[11px]">
-            <div className="rounded-lg border bg-zinc-50 p-2">
-              <div className="font-semibold mb-1">Mesleki</div>
-              <div>{anaKeySummary.MESLEKI} soru</div>
-            </div>
-            <div className="rounded-lg border bg-zinc-50 p-2">
-              <div className="font-semibold mb-1">Davranışsal</div>
-              <div>{anaKeySummary.DAVRANISSAL} soru</div>
-            </div>
-            <div className="rounded-lg border bg-zinc-50 p-2">
-              <div className="font-semibold mb-1">Bireysel</div>
-              <div>{anaKeySummary.BIREYSEL} soru</div>
-            </div>
-          </div>
-
-          <div className="text-[11px] text-zinc-500">
-            Bu özet, ilgili şablonun hangi yeterlilik alanını ne kadar kapsadığını görmenizi sağlar. Gerçek sistemde bu
-            şablon bir API çağrısı ile kaydedilecektir.
-          </div>
-
-          <button
-            onClick={handleCreate}
-            className="w-full px-3 py-2 rounded-lg text-sm text-white"
-            style={{ background: theme.brand.primary }}
-          >
-            Anket Taslağını Oluştur
-          </button>
-        </div>
       </div>
     </PageShell>
   );
@@ -1192,9 +913,7 @@ function SurveyPage() {
   const evaluatee = getUser(evaluateeId);
 
   const evaluatorCandidates = allUsers.filter((u) => u.id !== evaluateeId);
-  const [evaluatorId, setEvaluatorId] = useState<number>(
-    evaluatorCandidates[0]?.id ?? allUsers[0].id
-  );
+  const [evaluatorId, setEvaluatorId] = useState<number>(evaluatorCandidates[0]?.id ?? allUsers[0].id);
 
   const [puan, setPuan] = useState<Record<number, number>>({});
   const [yorum, setYorum] = useState<Record<number, string>>({});
@@ -1216,6 +935,7 @@ function SurveyPage() {
   };
 
   const submit = () => {
+    // Burada API'ye gönderilebilir.
     alert("Anket gönderildi (mock).");
   };
 
@@ -1295,8 +1015,7 @@ function SurveyPage() {
           <div className="text-xs text-zinc-500">
             Rol çarpanı:{" "}
             {(
-              rolCarpani[`${getUser(evaluatorId).rol}-${evaluatee.rol}` as `${Rol}-${Rol}`] ??
-              1
+              rolCarpani[`${getUser(evaluatorId).rol}-${evaluatee.rol}` as `${Rol}-${Rol}`] ?? 1
             ).toFixed(2)}
           </div>
         </div>
@@ -1383,8 +1102,7 @@ function SavedSurveysPage() {
     [cycleId, durum]
   );
 
-  const selected =
-    selectedId != null ? savedSurveys.find((s) => s.id === selectedId) ?? null : null;
+  const selected = selectedId != null ? savedSurveys.find((s) => s.id === selectedId) ?? null : null;
 
   return (
     <PageShell>
@@ -1525,8 +1243,8 @@ function SavedSurveysPage() {
                     </div>
                     <div className="text-[11px] text-zinc-500 mb-3">
                       <p>
-                        <b>Düzenleme:</b> Gerçek uygulamada bu alandan ilgili anket tekrar açılıp puanlar
-                        güncellenir. Şu an arayüz mock amaçlıdır.
+                        <b>Düzenleme:</b> Gerçek uygulamada bu alandan ilgili anket tekrar açılıp puanlar güncellenir.
+                        Şu an arayüz mock amaçlıdır.
                       </p>
                     </div>
                     <button
@@ -1758,9 +1476,9 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
    ========================================================================= */
 
 export default function Kurumsal360() {
-  const [page, setPage] = useState<
-    "dashboard" | "assign" | "builder" | "survey" | "saved" | "reports"
-  >("dashboard");
+  const [page, setPage] = useState<"dashboard" | "assign" | "survey" | "saved" | "reports">(
+    "dashboard"
+  );
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true); // demo için true
 
   if (!isLoggedIn) return <Login onSuccess={() => setIsLoggedIn(true)} />;
@@ -1776,14 +1494,13 @@ export default function Kurumsal360() {
 
       {page === "dashboard" && <Dashboard />}
       {page === "assign" && <AssignmentsPage />}
-      {page === "builder" && <SurveyBuilderPage />}
       {page === "survey" && <SurveyPage />}
       {page === "saved" && <SavedSurveysPage />}
       {page === "reports" && <ReportsPage />}
 
       <footer className="border-t border-zinc-200 bg-white/60">
         <div className="px-8 py-3 text-xs text-zinc-500 flex items-center justify-between">
-          <span>© 2025 IMAR A.Ş.</span>
+          <span>© 2025 Kurum A.Ş.</span>
           <span>Gizlilik • Kullanım Koşulları</span>
         </div>
       </footer>
